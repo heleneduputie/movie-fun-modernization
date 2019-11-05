@@ -14,26 +14,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.fasterxml.jackson.dataformat.csv.CsvSchema.ColumnType.NUMBER;
-import static org.superbiz.moviefun.CsvUtils.readFromCsv;
-
 @Service
 public class AlbumsUpdater {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ObjectReader objectReader;
     private final BlobStore blobStore;
-    private final AlbumsBean albumsBean;
+    private final AlbumsRepository albumsBean;
 
-    public AlbumsUpdater(BlobStore blobStore, AlbumsBean albumsBean) {
+    public AlbumsUpdater(BlobStore blobStore, AlbumsRepository albumsBean) {
         this.blobStore = blobStore;
         this.albumsBean = albumsBean;
 
         CsvSchema schema = CsvSchema.builder()
             .addColumn("artist")
             .addColumn("title")
-            .addColumn("year", NUMBER)
-            .addColumn("rating", NUMBER)
+            .addColumn("year", CsvSchema.ColumnType.NUMBER)
+            .addColumn("rating", CsvSchema.ColumnType.NUMBER)
             .build();
 
         objectReader = new CsvMapper().readerFor(Album.class).with(schema);
@@ -47,7 +44,7 @@ public class AlbumsUpdater {
             return;
         }
 
-        List<Album> albumsToHave = readFromCsv(objectReader, maybeBlob.get().inputStream);
+        List<Album> albumsToHave = CsvUtils.readFromCsv(objectReader, maybeBlob.get().inputStream);
         List<Album> albumsWeHave = albumsBean.getAlbums();
 
         createNewAlbums(albumsToHave, albumsWeHave);
